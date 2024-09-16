@@ -36,7 +36,7 @@ export const addItemToCart=async ({userId, productId,qty}:AddItemToCart)=>{
     p.product.toString() === productId
   
   );
-  console.log(existInCart)
+ 
   if(existInCart)
   {
     return {data:"items already exist in the cart", statusCode:400};
@@ -59,4 +59,49 @@ export const addItemToCart=async ({userId, productId,qty}:AddItemToCart)=>{
   
   const updatedCart = await cart.save();
   return {data:updatedCart , statusCode:200}
+};
+
+interface UpateItemToCart{
+  userId:string;
+  productId : any,
+  qty:number;
+}
+export const updateItemToCart=async ({userId, productId,qty}:UpateItemToCart)=>{
+  const cart =await getActiveCartForUser({userId})
+
+  const existInCart =  await cart.items.find((p)=>
+    p.product.toString() === productId
+  
+  );
+  if(!existInCart)
+    {
+      return {data:"item does not exist in the cart", statusCode:400};
+    }
+    const product = await productModel.findById(productId);
+  
+  if(!product)
+  {
+    return {data:"product not exist", statusCode:400};
+  }
+ 
+  if(product.stock+existInCart.qty<qty)
+  {
+    return {data:"stock less than qty" , statusCode:400}
+  }
+    existInCart.qty=qty;
+
+    const otherCartItems = cart.items.filter((p)=>p.product.toString() !== productId);
+
+    let total = otherCartItems.reduce((sum,product)=>{
+      sum+=product.qty*product.unitPrice
+      
+      return sum;
+     
+    },0);
+  
+    total+=existInCart.qty*existInCart.unitPrice;
+    cart.totalAmount=total;
+   
+    const updatedCart = await cart.save();
+    return {data: updatedCart, statusCode:200}
 };
