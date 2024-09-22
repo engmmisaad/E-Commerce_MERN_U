@@ -49,5 +49,5 @@ else
 }
 }
 const generateJWT= (data:any)=>{
-    return jwt.sign(data,"krvNb1hNjsMzksGsj8neXePhlkamLSQY");
+    return jwt.sign(data,process.env.JWT_KEY||'');
 };
